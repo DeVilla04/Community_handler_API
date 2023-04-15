@@ -10,10 +10,11 @@ import { authentication } from "../middleware/authentication.js";
 
 const router = Router();
 
-router.post("/v1/community", authentication, createCommunity);
-router.get("/v1/community", getAllCommunities);
-router.get("/v1/community/:id/members", getAllCommunityMembers);
-router.get("/v1/community/me/owner", authentication, getMyOwnedCommunities);
-router.get("/v1/community/me/member", authentication, getMyJoinedCommunities);
+// Define the routes for the community
+router.post("/v1/community", authentication, createCommunity); // POST /v1/community
+router.get("/v1/community", getAllCommunities); // GET /v1/community
+router.get("/v1/community/:id/members", getAllCommunityMembers); // GET /v1/community/:id/members
+router.get("/v1/community/me/owner", authentication, getMyOwnedCommunities); // GET /v1/community/me/owner/
+router.get("/v1/community/me/member", authentication, getMyJoinedCommunities); // GET /v1/community/me/member/
 
 export default router;

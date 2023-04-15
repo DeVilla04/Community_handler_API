@@ -4,11 +4,13 @@ import sequelize from "../db.js";
 // import Member from "./member.js";
 
 const Community = sequelize.define(
-  "community",
+  // define the model
+  "community", // table name
   {
+    // define the columns
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.STRING, // data type
+      primaryKey: true, // primary key
     },
     name: {
       type: DataTypes.STRING(128),
@@ -25,7 +27,7 @@ const Community = sequelize.define(
       allowNull: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true } // add timestamps
 );
 
 // relationships
