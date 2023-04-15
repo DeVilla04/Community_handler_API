@@ -5,8 +5,9 @@ import User from "./user.js";
 import Role from "./role.js";
 
 const Member = sequelize.define(
-  "member",
+  "member", // table name
   {
+    // define the columns
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -27,7 +28,7 @@ const Member = sequelize.define(
       allowNull: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true } // add timestamps
 );
 
 // // relationships
@@ -59,6 +60,7 @@ const Member = sequelize.define(
 //   as: "role",
 // });
 
+// Define associations
 const defineAssociations = () => {
   Community.hasMany(Member, {
     foreignKey: "community",

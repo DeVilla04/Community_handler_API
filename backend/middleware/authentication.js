@@ -4,13 +4,15 @@ import dotenv from "dotenv";
 dotenv.config();
 // Middleware to check if the user is authenticated using cookies
 const authentication = (req, res, next) => {
-  const token = req.cookies.token;
+  // req, res and next are parameters passed to the middleware function
+  const token = req.cookies.token; // get the token from the cookies
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized - Please sign in" });
+    // if token is not found
+    return res.status(401).json({ message: "Unauthorized - Please sign in" }); // return error
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // verify the token
+    req.user = decoded; // set the user in the request object
     next();
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized - Invalid token" });

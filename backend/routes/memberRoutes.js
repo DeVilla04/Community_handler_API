@@ -4,7 +4,8 @@ import { authentication } from "../middleware/authentication.js";
 
 const router = Router();
 
-router.post("/v1/member", authentication, addMember);
-router.delete("/v1/member/:id", authentication, removeMember);
+// Define the routes for the member
+router.post("/v1/member", authentication, addMember); // POST /v1/member
+router.delete("/v1/member/:id", authentication, removeMember); // DELETE /v1/member/:id
 
 export default router;

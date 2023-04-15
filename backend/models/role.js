@@ -3,8 +3,9 @@ import sequelize from "../db.js";
 // import Member from "./member.js";
 
 const Role = sequelize.define(
-  "role",
+  "role", // table name
   {
+    // define the columns
     id: {
       type: DataTypes.STRING,
       primaryKey: true,
@@ -14,7 +15,7 @@ const Role = sequelize.define(
       allowNull: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true } // add timestamps
 );
 
 // // relationships

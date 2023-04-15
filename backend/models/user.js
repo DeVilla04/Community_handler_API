@@ -4,9 +4,10 @@ import sequelize from "../db.js";
 // import Member from "./member.js";
 
 const User = sequelize.define(
-  "user",
+  "user", // table name
   {
     id: {
+      // define the columns
       type: DataTypes.STRING,
       primaryKey: true,
     },
@@ -24,7 +25,7 @@ const User = sequelize.define(
       allowNull: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true } // add timestamps
 );
 
 // // relationships

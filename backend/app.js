@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import memberRoutes from "./routes/memberRoutes.js";
 import { defineAssociations } from "./models/member.js";
+
 // Create a new express application instance
 const app = express();
 
@@ -25,7 +26,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // middleware to parse the cookies
 app.use(cookieParser());
 
-// create the database tables
+// create the database tables if they don't exist and define the associations between the models
+// This will only create the table not the database. So first create the database and then run the app
 defineAssociations();
 sequelize.sync();
 

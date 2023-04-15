@@ -4,7 +4,8 @@ import { authentication } from "../middleware/authentication.js";
 
 const router = Router();
 
-router.post("/v1/role", authentication, createRole);
-router.get("/v1/role", getAllRoles);
+// Define the routes for the role
+router.post("/v1/role", createRole); // POST /v1/role
+router.get("/v1/role", getAllRoles); // GET /v1/role
 
 export default router;
