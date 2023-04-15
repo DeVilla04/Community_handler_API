@@ -55,7 +55,7 @@ const getAllCommunities = async (req, res) => {
   // implement logic to retrieve all communities
   try {
     // Details of the owner should be expanded to know the name of the owner
-    const { count, rows } = await Community.findAndCountAll({
+    let { count, rows } = await Community.findAndCountAll({
       include: [
         {
           model: User,
@@ -63,6 +63,17 @@ const getAllCommunities = async (req, res) => {
           attributes: ["id", "name"],
         },
       ],
+    });
+    console.log(rows);
+    rows = rows.map((row) => {
+      return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        owner: row.communityOwner,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      };
     });
     const pages = Math.ceil(count / 10);
     const page = req.query.page || 1;
@@ -86,7 +97,7 @@ const getAllCommunityMembers = async (req, res) => {
     // Details of the member should be expanded to know the name of the member and roles should be expanded to know the name of the role of the member
     const communityID = await Community.findOne({ where: { slug: id } });
     console.log(communityID.id);
-    const { count, rows } = await Member.findAndCountAll({
+    let { count, rows } = await Member.findAndCountAll({
       where: { community: communityID.id },
       include: [
         {
@@ -100,6 +111,16 @@ const getAllCommunityMembers = async (req, res) => {
           attributes: ["id", "name"],
         },
       ],
+    });
+    rows = rows.map((row) => {
+      return {
+        id: row.id,
+        community: row.community,
+        user: row.userMembers,
+        role: row.roleMembers,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+      };
     });
     const pages = Math.ceil(count / 10);
     const page = req.query.page || 1;
