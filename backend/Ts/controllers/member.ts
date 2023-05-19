@@ -1,4 +1,4 @@
-import { Request, Response, RequestHandler } from "express";
+import { Response, RequestHandler } from "express";
 import Validator from "validatorjs";
 import { Snowflake } from "@theinternetfolks/snowflake";
 import Community from "../models/community";
