@@ -22,12 +22,10 @@ app.use(cookieParser());
 
 // Middleware to enable CORS
 const corsOptions: cors.CorsOptions = {
-  origin: "http://localhost:3000",
-  optionsSuccessStatus: 200,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   allowedHeaders: "Content-Type,Authorization",
 };
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Define the associations
 // defineAssociations();
