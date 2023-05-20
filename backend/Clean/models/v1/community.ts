@@ -27,11 +27,12 @@ class Community extends Model {
   @Column({ type: DataType.STRING, allowNull: false })
   owner!: string;
 
-  @Column({ defaultValue: DataType.NOW })
-  createdAt!: Date;
+  //Getting error for this not sure why in all models
+  //   @Column({ defaultValue: DataType.NOW })
+  //   createdAt!: Date;
 
-  @Column({ defaultValue: DataType.NOW, onUpdate: DataType.NOW })
-  updatedAt!: Date;
+  //   @Column({ defaultValue: DataType.NOW, onUpdate: DataType.NOW })
+  //   updatedAt!: Date;
 
   @BelongsTo(() => User, "owner")
   communityOwner!: User;

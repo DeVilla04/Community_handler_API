@@ -62,7 +62,7 @@ class RoleService {
   }
 
   // Get all roles
-  static async getAllRoles(page: number) {
+  static async getAllRoles(page: number | null) {
     try {
       let { count, rows } = await Role.findAndCountAll();
       const roles: (Role | Rows)[] = rows.map((role) => {
@@ -95,12 +95,13 @@ class RoleService {
         }
         return role;
       });
+
       return {
         status: true,
         meta: {
           total: count,
           pages: Math.ceil(count / 10),
-          page: page,
+          page: page || 1,
         },
         Content: {
           data: roles,
