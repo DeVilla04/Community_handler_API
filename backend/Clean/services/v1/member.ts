@@ -1,10 +1,7 @@
 import Validator from "validatorjs";
 import { Snowflake } from "@theinternetfolks/snowflake";
-import Community from "@models/v1/community";
-import Member from "@models/v1/member";
-import Role from "@models/v1/role";
-import User from "@models/v1/user";
-
+import Database from "@loaders/v1/database";
+import { Community, Member, Role, User } from "@prisma/client";
 class MemberService {
   static async addMember(
     ownerID: string,
@@ -68,9 +65,10 @@ class MemberService {
       };
     }
     // Check if the community exists
-    const communityExists: Community | null = await Community.findOne({
-      where: { id: community },
-    });
+    const communityExists: Community | null =
+      await Database.instance.community.findUnique({
+        where: { id: community },
+      });
     if (!communityExists) {
       return {
         status: false,
@@ -85,7 +83,7 @@ class MemberService {
     }
 
     // Check if the member exists
-    const memberExists: User | null = await User.findOne({
+    const memberExists: User | null = await Database.instance.user.findUnique({
       where: { id: user },
     });
     if (!memberExists) {
@@ -102,7 +100,7 @@ class MemberService {
     }
 
     // Check if the role exists
-    const roleExists: Role | null = await Role.findOne({
+    const roleExists: Role | null = await Database.instance.role.findUnique({
       where: { id: role },
     });
     if (!roleExists) {
@@ -132,9 +130,13 @@ class MemberService {
     }
 
     // Check if the user is already a member of the community
-    const memberAlreadyExists: Member | null = await Member.findOne({
-      where: { community: community, user: user },
-    });
+    const memberAlreadyExists: Member | null =
+      await Database.instance.member.findFirst({
+        where: {
+          user: user,
+          community: community,
+        },
+      });
     if (memberAlreadyExists) {
       return {
         status: false,
@@ -149,11 +151,13 @@ class MemberService {
 
     // Create a new member
     try {
-      const savedMember: Member = await Member.create({
-        id: Snowflake.generate(),
-        community: community,
-        user: user,
-        role: role,
+      const savedMember: Member = await Database.instance.member.create({
+        data: {
+          id: Snowflake.generate(),
+          community: community,
+          user: user,
+          role: role,
+        },
       });
       return {
         status: true,
@@ -197,17 +201,13 @@ class MemberService {
     }
 
     // Check if the member is actually member of some community
-    const { rows, count } = await Member.findAndCountAll({
+    const memberExists = await Database.instance.member.findMany({
       where: { id: memberId },
-      include: [
-        {
-          model: Community,
-          as: "communityObj",
-          attributes: ["id", "owner"],
-        },
-      ],
+      include: {
+        communityId: true,
+      },
     });
-    if (count === 0) {
+    if (memberExists.length === 0) {
       return {
         status: false,
         errors: [
@@ -220,9 +220,9 @@ class MemberService {
       };
     }
     let foundCommunityID: string | null = null;
-    rows.forEach((member) => {
-      if (member.communityObj.owner === ownerID) {
-        foundCommunityID = member.communityObj.id;
+    memberExists.forEach((member) => {
+      if (member.communityId.owner === ownerID) {
+        foundCommunityID = member.community;
       }
     });
 
@@ -240,7 +240,7 @@ class MemberService {
 
     // Delete the member
     try {
-      const deletedMember: number = await Member.destroy({
+      const deletedMember = await Database.instance.member.delete({
         where: { id: memberId },
       });
       return {

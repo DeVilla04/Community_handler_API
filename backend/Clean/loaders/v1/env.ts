@@ -1,10 +1,7 @@
 class Env {
   static names = [
     "PORT",
-    "DB_HOST",
-    "DB_USERNAME",
-    "DB_PASSWORD",
-    "DB_NAME",
+    "DATABASE_URL",
     "JWT_SECRET_KEY",
     "JWT_EXPIRES_IN",
   ] as const;

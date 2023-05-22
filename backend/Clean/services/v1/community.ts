@@ -1,9 +1,6 @@
-import Community from "@models/v1/community";
-import Role from "@models/v1/role";
-import User from "@models/v1/user";
-import Member from "@models/v1/member";
 import Validator from "validatorjs";
 import { Snowflake } from "@theinternetfolks/snowflake";
+import Database from "@loaders/v1/database";
 
 interface allCommunity {
   id: string;
@@ -41,7 +38,7 @@ class CommunityService {
 
     try {
       const slug: string = name.toLowerCase().replace(/ /g, "-");
-      const communityExists: Community | null = await Community.findOne({
+      const communityExists = await Database.instance.community.findUnique({
         where: { slug: slug },
       });
       if (communityExists) {
@@ -56,22 +53,28 @@ class CommunityService {
           ],
         };
       }
-      const createdCommunity = await Community.create({
-        id: Snowflake.generate(),
-        name: name,
-        slug: slug,
-        owner: owner,
+      const createdCommunity = await Database.instance.community.create({
+        data: {
+          id: Snowflake.generate(),
+          name: name,
+          slug: slug,
+          owner: owner,
+        },
       });
 
-      const createdrole = await Role.create({
-        id: Snowflake.generate(),
-        name: "Community Admin",
+      const createdrole = await Database.instance.role.create({
+        data: {
+          id: Snowflake.generate(),
+          name: "Community Admin",
+        },
       });
-      const createdmember = await Member.create({
-        id: Snowflake.generate(),
-        community: createdCommunity.id,
-        user: owner,
-        role: createdrole.id,
+      const createdmember = await Database.instance.member.create({
+        data: {
+          id: Snowflake.generate(),
+          community: createdCommunity.id,
+          user: owner,
+          role: createdrole.id,
+        },
       });
 
       return {
@@ -96,29 +99,25 @@ class CommunityService {
     }
   }
 
-  static async getAllCommunity(page: number | null) {
+  static async getAllCommunities(page: number | null) {
     try {
-      const { count, rows } = await Community.findAndCountAll({
-        include: [
-          {
-            model: User,
-            as: "communityOwner",
-            attributes: ["id", "name"],
-          },
-        ],
+      const communities = await Database.instance.community.findMany({
+        include: {
+          ownerID: true,
+        },
       });
 
-      const allCommunities: allCommunity[] = rows.map((community) => {
+      const allCommunities: allCommunity[] = communities.map((community) => {
         return {
           id: community.id,
           name: community.name,
           slug: community.slug,
           owner: {
-            id: community.communityOwner.id,
-            name: community.communityOwner.name,
+            id: community.ownerID.id,
+            name: community.ownerID.name,
           },
-          createdAt: community.createdAt,
-          updatedAt: community.updatedAt,
+          createdAt: community.CreatedAt,
+          updatedAt: community.UpdatedAt,
         };
       });
 
@@ -127,8 +126,8 @@ class CommunityService {
         status: "true",
         content: {
           meta: {
-            total: count,
-            pages: Math.ceil(count / 10),
+            total: communities.length,
+            pages: Math.ceil(communities.length / 10),
             page: page || 1,
           },
           data: allCommunities,
@@ -155,40 +154,32 @@ class CommunityService {
     page: number | null
   ) {
     try {
-      const communityId = await Community.findOne({
+      const communityId = await Database.instance.community.findUnique({
         where: {
           slug: communitySlug,
         },
       });
 
-      const { count, rows } = await Member.findAndCountAll({
+      const members = await Database.instance.member.findMany({
         where: {
           community: communityId!.id,
         },
-        include: [
-          {
-            model: User,
-            as: "userObj",
-            attributes: ["id", "name"],
-          },
-          {
-            model: Role,
-            as: "roleObj",
-            attributes: ["id", "name"],
-          },
-        ],
+        include: {
+          userId: true,
+          roleId: true,
+        },
       });
 
-      const allMembers = rows.map((member) => {
+      const allMembers = members.map((member) => {
         return {
           id: member.id,
           user: {
-            id: member.userObj.id,
-            name: member.userObj.name,
+            id: member.userId.id,
+            name: member.userId.name,
           },
           role: {
-            id: member.roleObj.id,
-            name: member.roleObj.name,
+            id: member.roleId.id,
+            name: member.roleId.name,
           },
           createdAt: member.createdAt,
           updatedAt: member.updatedAt,
@@ -200,8 +191,8 @@ class CommunityService {
         status: "true",
         content: {
           meta: {
-            total: count,
-            pages: Math.ceil(count / 10),
+            total: members.length,
+            pages: Math.ceil(members.length / 10),
             page: page || 1,
           },
           data: allMembers,
@@ -223,7 +214,112 @@ class CommunityService {
     }
   }
 
-  static async getMyOwnedCommunities(userId: string, page: number | null) {}
+  static async getMyOwnedCommunities(userId: string, page: number | null) {
+    try {
+      const communities = await Database.instance.community.findMany({
+        where: {
+          owner: userId,
+        },
+        include: {
+          ownerID: true,
+        },
+      });
+
+      const allCommunities: allCommunity[] = communities.map((community) => {
+        return {
+          id: community.id,
+          name: community.name,
+          slug: community.slug,
+          owner: {
+            id: community.ownerID.id,
+            name: community.ownerID.name,
+          },
+          createdAt: community.CreatedAt,
+          updatedAt: community.UpdatedAt,
+        };
+      });
+
+      return {
+        // return the communities
+        status: "true",
+        content: {
+          meta: {
+            total: communities.length,
+            pages: Math.ceil(communities.length / 10),
+            page: page || 1,
+          },
+          data: allCommunities,
+        },
+      };
+    } catch (error: any) {
+      return {
+        status: false,
+        errors: [
+          {
+            message: "Server error.",
+            code: "SERVER_ERROR",
+          },
+          {
+            error: error.message,
+          },
+        ],
+      };
+    }
+  }
+
+  static async getMyJoinedCommunities(userId: string, page: number | null) {
+    try {
+      const communities = await Database.instance.member.findMany({
+        include: {
+          communityId: true,
+        },
+        where: {
+          user: userId,
+        },
+      });
+
+      communities.map((community) => {
+        if (community.communityId.owner !== userId) {
+          return {
+            id: community.communityId.id,
+            name: community.communityId.name,
+            slug: community.communityId.slug,
+            owner: {
+              id: community.communityId.owner,
+            },
+            createdAt: community.communityId.CreatedAt,
+            updatedAt: community.communityId.UpdatedAt,
+          };
+        }
+      }) as allCommunity[];
+
+      return {
+        // return the communities
+        status: "true",
+        content: {
+          meta: {
+            total: communities.length,
+            pages: Math.ceil(communities.length / 10),
+            page: page || 1,
+          },
+          data: communities,
+        },
+      };
+    } catch (error: any) {
+      return {
+        status: false,
+        errors: [
+          {
+            message: "Server error.",
+            code: "SERVER_ERROR",
+          },
+          {
+            error: error.message,
+          },
+        ],
+      };
+    }
+  }
 }
 
 export default CommunityService;

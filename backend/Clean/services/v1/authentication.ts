@@ -1,12 +1,14 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import Env from "@loaders/v1/env";
 
-const SECRET_KEY: string = Env.variable.JWT_SECRET_KEY!;
-const EXPIRES_IN: string = Env.variable.JWT_EXPIRES_IN!;
+// const SECRET_KEY: string = Env.variable.JWT_SECRET_KEY!;
+// const EXPIRES_IN: string = Env.variable.JWT_EXPIRES_IN!;
 
 const generateToken = (payload: Object): string => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: EXPIRES_IN });
+  return jwt.sign(payload, Env.variable.JWT_SECRET_KEY, {
+    expiresIn: Env.variable.JWT_EXPIRES_IN,
+  });
 };
 
 interface AuthenticatedRequest extends Request {
@@ -31,7 +33,10 @@ const authentication = (
     });
   }
   try {
-    const decoded: string | jwt.JwtPayload = jwt.verify(token, SECRET_KEY);
+    const decoded: string | jwt.JwtPayload = jwt.verify(
+      token,
+      Env.variable.JWT_SECRET_KEY
+    );
 
     if (typeof decoded !== "string" && decoded.exp! < Date.now() / 1000) {
       return res.status(401).json({

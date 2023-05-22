@@ -1,8 +1,9 @@
 import Validator from "validatorjs";
-import Role from "@models/v1/role";
+import Database from "@loaders/v1/database";
 import { Snowflake } from "@theinternetfolks/snowflake";
+import { Role } from "@prisma/client";
 
-interface Rows {
+interface RoleScope {
   id: string;
   name: string;
   scopes: string[];
@@ -35,9 +36,11 @@ class RoleService {
 
     // Create the role
     try {
-      const savedRole = await Role.create({
-        id: Snowflake.generate(),
-        name: name,
+      const savedRole = await Database.instance.role.create({
+        data: {
+          id: Snowflake.generate(),
+          name: name,
+        },
       });
       return {
         status: true,
@@ -64,34 +67,34 @@ class RoleService {
   // Get all roles
   static async getAllRoles(page: number | null) {
     try {
-      let { count, rows } = await Role.findAndCountAll();
-      const roles: (Role | Rows)[] = rows.map((role) => {
+      let allRoles = await Database.instance.role.findMany();
+      const roles: (Role | RoleScope)[] = allRoles.map((role) => {
         if (role.name == "Community Admin") {
           return {
             id: role.id,
             name: role.name,
             scopes: ["member-get", "member-add", "member-remove"],
-            // createdAt: role.createdAt,
-            // updatedAt: role.updatedAt,
-          } as Rows;
+            createdAt: role.createdAt,
+            updatedAt: role.updatedAt,
+          } as RoleScope;
         }
         if (role.name == "Community Member") {
           return {
             id: role.id,
             name: role.name,
             scopes: ["member-get"],
-            // createdAt: role.createdAt,
-            // updatedAt: role.updatedAt,
-          } as Rows;
+            createdAt: role.createdAt,
+            updatedAt: role.updatedAt,
+          } as RoleScope;
         }
         if (role.name == "Community Moderator") {
           return {
             id: role.id,
             name: role.name,
             scopes: ["member-get", "member-remove"],
-            // createdAt: role.createdAt,
-            // updatedAt: role.updatedAt,
-          } as Rows;
+            createdAt: role.createdAt,
+            updatedAt: role.updatedAt,
+          } as RoleScope;
         }
         return role;
       });
@@ -99,8 +102,8 @@ class RoleService {
       return {
         status: true,
         meta: {
-          total: count,
-          pages: Math.ceil(count / 10),
+          total: allRoles.length,
+          pages: Math.ceil(allRoles.length / 10),
           page: page || 1,
         },
         Content: {

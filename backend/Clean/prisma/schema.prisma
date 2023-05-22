@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Community {
+  id        String   @id
+  name      String   @db.VarChar(128)
+  slug      String   @unique
+  ownerID   User     @relation(fields: [owner], references: [id])
+  owner     String
+  CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @updatedAt
+  Member    Member[]
+}
+
+model User {
+  id        String      @id
+  name      String      @db.VarChar(64)
+  email     String      @unique
+  password  String      @db.VarChar(128)
+  Community Community[]
+  Member    Member[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Role {
+  id        String   @id
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Member    Member[]
+}
+
+model Member {
+  id          String    @id
+  communityId Community @relation(fields: [community], references: [id])
+  community   String
+  userId      User      @relation(fields: [user], references: [id])
+  user        String
+  roleId      Role      @relation(fields: [role], references: [id])
+  role        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

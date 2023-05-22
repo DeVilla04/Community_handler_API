@@ -1,8 +1,9 @@
-import User from "@models/v1/user";
+import Database from "@loaders/v1/database";
 import { Snowflake } from "@theinternetfolks/snowflake";
 import Validator from "validatorjs";
 import bcrypt from "bcrypt";
 import { generateToken } from "@services/v1/authentication";
+import { User } from "@prisma/client";
 class UserService {
   static async signUp(name: string, email: string, password: string) {
     // Validate the input
@@ -144,7 +145,9 @@ class UserService {
       };
     }
     // Check if the user already exists
-    const userExists = await User.findOne({ where: { email: email } });
+    const userExists = await Database.instance.user.findFirst({
+      where: { email: email },
+    });
     if (userExists) {
       return {
         status: false,
@@ -161,15 +164,17 @@ class UserService {
         // Create a new user
         const hashedPassword = await bcrypt.hash(password, 10);
         const id = Snowflake.generate();
-        const newUser: User = await User.create({
-          id: id,
-          name: name,
-          email: email,
-          password: hashedPassword,
+        const newUser: User = await Database.instance.user.create({
+          data: {
+            id: id,
+            name: name,
+            email: email,
+            password: hashedPassword,
+          },
         });
 
         // Generate a token
-        const token = generateToken(newUser.dataValues);
+        const token = generateToken(newUser);
 
         // Return the response
         return { status: true, newUser, token };
@@ -214,7 +219,9 @@ class UserService {
     // Check if the user exists
     try {
       // Check if the user exists
-      const user = await User.findOne({ where: { email: email } });
+      const user = await Database.instance.user.findFirst({
+        where: { email: email },
+      });
       if (!user) {
         return {
           status: false,
@@ -242,7 +249,7 @@ class UserService {
           };
         } else {
           // Generate a token
-          const token = generateToken(user.dataValues);
+          const token = generateToken(user);
 
           // Return the response
           return {
@@ -280,7 +287,9 @@ class UserService {
 
   static async getMe(userId: string) {
     try {
-      const user = await User.findOne({ where: { id: userId } }); // find the user in the database
+      const user = await Database.instance.user.findUnique({
+        where: { id: userId },
+      }); // find the user in the database
       if (!user) {
         return {
           status: false,
