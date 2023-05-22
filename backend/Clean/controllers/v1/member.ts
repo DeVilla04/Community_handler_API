@@ -5,12 +5,12 @@ import { AuthenticatedRequest } from "@services/v1/authentication";
 class MemberController {
   static async addMember(req: AuthenticatedRequest, res: Response) {
     const ownerId = req.user.id;
-    const { communityId, userId, roleId } = req.body;
+    const { community, user, role } = req.body;
     const result = await MemberService.addMember(
       ownerId,
-      communityId,
-      userId,
-      roleId
+      community,
+      user,
+      role
     );
     if (result.status && result.savedMember) {
       res.status(201).json({
